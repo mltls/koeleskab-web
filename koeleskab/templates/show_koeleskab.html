@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+{% block body %}
+<script src="https://d3js.org/d3.v4.min.js" ></script>
+<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+
+<h1>Koeleskab {{ k_id }}</h1>
+
+<div>
+  <h2 id="demo"></h2>
+</div>
+
+<svg id="visualisation"></svg>
+
+<script>
+var data = [];
+
+function loadDoc() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+     data = JSON.parse(this.responseText);
+    }
+  };
+  xhttp.open("GET", "sim_data", true);
+  xhttp.send();
+};
+
+var vis = d3.select("#visualisation"),
+  height=300,
+  margins={
+    top: 20,
+    right: 20,
+    bottom: 20,
+    left: 40};
+
+
+function lol() {
+
+var width = $(".page").width();
+d3.select("#visualisation").attr("width", width).attr("height", height);
+
+function maxfun_sale(data, maxmin) {
+    vals = [];
+    for(i=0; i < data.length; i++){
+        vals.push(data[i].sale);
+    };
+    return maxmin(vals);
+};
+function maxfun_year(data, maxmin) {
+    vals = [];
+    for(i=0; i < data.length; i++){
+        vals.push(data[i].year);
+    };
+    return maxmin(vals);
+};
+
+xmin = maxfun_year(data, d3.min);
+xmax = maxfun_year(data, d3.max);
+ymin = maxfun_sale(data, d3.min);
+ymax = maxfun_sale(data, d3.max);
+
+var xScale = d3.scaleLinear().range([margins.left, width - margins.right]).domain([xmin,xmax]);
+var yScale = d3.scaleLinear().range([height - margins.top, margins.bottom]).domain([ymin,ymax]);
+
+var xAxis = d3.axisBottom(xScale);
+var yAxis = d3.axisLeft(yScale);
+
+d3.select("#thesvgid").remove();
+d3.select("#xaxis").remove();
+d3.select("#yaxis").remove();
+
+vis.append("svg:g")
+    .attr("transform", "translate(0," + (height - margins.bottom) + ")")
+    .attr('id', 'xaxis')
+    .call(xAxis);
+
+vis.append("svg:g")
+    .attr("transform", "translate(" + (margins.left) + ",0)")
+    .attr('id', 'yaxis')
+    .call(yAxis);
+
+var lineGen = d3.line()
+    .x(function(d) { return xScale(d.year); })
+    .y(function(d) {return yScale(d.sale); });
+
+vis.append("svg:path")
+    .attr('d', lineGen(data))
+    .attr('id', 'thesvgid')
+    .attr('stroke', 'steelblue')
+    .attr('stroke-width', 1)
+    .attr('fill', 'none');
+
+};
+
+function main() {
+    loadDoc();
+    lol();
+};
+setInterval(main, 500);
+
+$(window).bind("resize", function() {
+    lol();
+});
+</script>
+
+
+<script>
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+if (this.readyState == 4 && this.status == 200) {
+    var nums = parseInt(this.responseText);
+    drawHeader(nums);
+    }
+  };
+xhttp.open("GET", "num_koeleskabs", true);
+xhttp.send();
+function drawHeader(nums) {
+    var range = Array.from({length: nums}, (x, i) => i + 1);
+    d3.select(".header")
+        .selectAll("a")
+        .data(range)
+        .enter().append("a")
+            .text(function (d) { return "Koeleskab " + d; })
+            .attr("href", function (d) { return "/" + d; });
+
+};
+</script>
+
+
+
+
+
+{% endblock %}

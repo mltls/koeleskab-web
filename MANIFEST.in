@@ -1,0 +1,3 @@
+graft koeleskab/templates
+graft koeleskab/static
+include koeleskab/schema.sql
